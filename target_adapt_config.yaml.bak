@@ -1,0 +1,40 @@
+# lightning.pytorch==2.0.0
+seed_everything: True
+trainer:
+  accelerator: auto
+  devices: auto
+  num_nodes: 1
+  precision: 32
+  logger:
+    class_path: TensorBoardLogger
+    init_args:
+      # logs/domainnet
+      save_dir: 'logs/domainnet'
+      name: 'real_source'
+#      version: ''
+  log_every_n_steps: 5
+  max_epochs: 1
+  min_epochs: null
+  check_val_every_n_epoch: 1
+  enable_checkpointing: False
+model:
+  class_path: adaptation.GmmBaAdaptationModule
+  init_args: 
+    feature_dim: 256
+    lr: 1e-3
+    red_feature_dim: 64
+    p_reject: 0.5
+    N_init: 30
+    augmentation: True
+    lam: 1
+    temperature: 0.1
+    ckpt_dir: 'source_models/visda/source_model_OPDA/checkpoints/source_ckpt.pt'
+data:
+
+  class_path: datasets.VisDADataModule
+  init_args:
+    batch_size: 64
+    category_shift: 'OPDA'
+    train_domain: 'train'
+    test_domain: 'validation'
+
