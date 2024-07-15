@@ -121,7 +121,7 @@ class BaseModule(L.LightningModule):
 class SourceModule(BaseModule):
     def __init__(self, datamodule, rejection_threshold=0.5, feature_dim=256, lr=1e-2, source_train_type='smooth',
                  ckpt_dir=''):
-        super(SourceModule, self).__init__(datamodule, feature_dim, lr, rejection_threshold, ckpt_dir)
+        super(SourceModule, self).__init__(datamodule, feature_dim, lr, ckpt_dir)
 
         if source_train_type == 'smooth':
             self.train_loss = CrossEntropyLabelSmooth(num_classes=self.known_classes_num, epsilon=0.1, reduction=True)
@@ -129,6 +129,8 @@ class SourceModule(BaseModule):
             self.train_loss = CrossEntropyLabelSmooth(num_classes=self.known_classes_num, epsilon=0.0, reduction=True)
         else:
             raise ValueError('Unknown source_train_type:', source_train_type)
+
+        self.rejection_threshold = rejection_threshold
 
         self.total_train_acc = Accuracy(task='multiclass', num_classes=self.known_classes_num)
 
@@ -220,9 +222,6 @@ class SourceModule(BaseModule):
             rej_target = torch.where(y == self.known_classes_num, 1, 0)
             rej_pred = torch.where(pred == self.known_classes_num, 1, 0)
             self.test_statscores.update(rej_pred, rej_target)
-
-        self.test_feature_embeddings = torch.cat([self.test_feature_embeddings, feature_embedding.cpu()], 0)
-        self.test_labels = torch.cat([self.test_labels, y.cpu()], 0)
 
     def on_test_epoch_end(self):
         if self.open_flag:
