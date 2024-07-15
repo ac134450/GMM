@@ -72,10 +72,10 @@ class SFUniDADataModuleBase(L.LightningDataModule):
                                                num_workers=8)
         else:
             return torch.utils.data.DataLoader(self.test_set, batch_size=self.batch_size, shuffle=True, drop_last=True,
-                                               num_workers=1)
+                                               num_workers=8)
 
     def test_dataloader(self):
-        return torch.utils.data.DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, num_workers=1)
+        return torch.utils.data.DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False, num_workers=8)
 
 
 class DomainNetDataModule(SFUniDADataModuleBase):
