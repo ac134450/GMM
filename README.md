@@ -6,6 +6,7 @@ This is the official repository to the paper "Memory-Efficient Pseudo-Labeling f
 ### Preparation
 - Clone this repository
 - Install the requirements by running `pip install -r requirements.txt`
+- Download datasets into the folder [data](data).
 
 ### Source training
 We uploaded the checkpoints of our pre-trained source models into the folder [source_models](source_models). To still do the source training yourself, edit the corresponding config file [source_training.yaml](configs/source_training.yaml) accordingly and run the following command: `python main.py fit --config configs/source_training.yaml`
