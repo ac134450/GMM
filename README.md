@@ -14,5 +14,5 @@ We uploaded the checkpoints of our pre-trained source models into the folder [so
 ### Source-only testing
 To test without adaptation, i.e. to get the source-only results, edit the corresponding config file [source_only_testing.yaml](configs/source_only_testing.yaml) to select the desired scenario and run the following command: `python main.py test --config configs/source_only_testing.yaml`
 
-### Online test-time adaptation to the target domain
+### Perform the online source-free universal domain adaptation to adapt to the target domain
 To perform the online test-time adaptation, edit the corresponding config file [target_adaptation.yaml](configs/target_adaptation.yaml) to select the desired scenario and run the following command: `python main.py fit --config configs/target_adaptation.yaml`
