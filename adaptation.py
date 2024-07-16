@@ -26,7 +26,7 @@ class GmmBaAdaptationModule(BaseModule):
         self.gmm = GaussianMixtureModel(self.source_class_num)
 
         # ---------- Unknown mask ----------
-        self.mask = mask(0.5 + p_reject / 2, 0.5 - p_reject / 2, N_init)
+        self.mask = mask(0.5 - p_reject / 2, 0.5 + p_reject / 2, N_init)
 
         # ---------- Further initializations ----------
         self.tta_transform = get_tta_transforms()
