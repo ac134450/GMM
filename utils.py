@@ -62,14 +62,14 @@ class mask():
 
         # Determine the threshold value for the percentage_threshold values
         known_mask = torch.zeros_like(entropy_values, dtype=torch.bool)
-        known_mask[entropy_values <= self.tau_low] = True
+        known_mask[entropy_values < self.tau_low] = True
         tau_low = self.tau_low
         while torch.sum(known_mask).item() <= 1:
             tau_low += self.tau_low
             known_mask = entropy_values <= tau_low
 
         unknown_mask = torch.zeros_like(entropy_values, dtype=torch.bool)
-        unknown_mask[entropy_values >= self.tau_high] = True
+        unknown_mask[entropy_values > self.tau_high] = True
         tau_high = self.tau_high
         while torch.sum(unknown_mask).item() <= 1:
             tau_high -= self.tau_high
