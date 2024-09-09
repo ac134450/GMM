@@ -28,4 +28,4 @@ data:
   init_args:
     batch_size: 64
     category_shift: 'OPDA'  # select category shift scenario
-    test_domain: 'sketch'  # select source domain
+    test_domain: 'validation'  # select target domain

@@ -21,9 +21,9 @@ model:
   init_args: 
     # select hyperparameters
     feature_dim: 256  # choose same number of feature dimensions as used for the source model (default is 256)
-    lr: 1e-2  # we used 1e-2 for VisDA-C and 1e-3 for DomainNet
+    lr: 1e-2  # we used 1e-2 for VisDA-C and 1e-3 for DomainNet and Office-Home
     red_feature_dim: 64
-    p_reject: 0.5
+    p_reject: 0.5  # we used 0.5 for VisDA-C and DomainNet and 0.25 for Office-Home
     N_init: 30
     augmentation: True
     lam: 1
@@ -31,9 +31,9 @@ model:
     alpha: 0.999
     ckpt_dir: 'source_models/visda/source_model_OPDA/checkpoints/source_ckpt.pt'  # select pre-trained source model matching the desired source domain and category shift
 data:
-  class_path: datasets.VisDADataModule  # change to datasets.DomainNetDataModule for DomainNet dataset
+  class_path: datasets.VisDADataModule  # change to datasets.DomainNetDataModule for DomainNet dataset and to datasets.OfficeHomeDataModule for Office-Home dataset
   init_args:
-    batch_size: 64
+    batch_size: 64  # we used 64 for VisDA-C and DomainNet and 32 for Office-Home
     category_shift: 'OPDA'  # select category shift
-    test_domain: 'validation'  # select target domain
+    test_domain: 'validation'  # select target domain(s). For Office-Home give the target domains as a list, e.g. ['Art', 'Product', 'Real_World']
 

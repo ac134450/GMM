@@ -24,7 +24,7 @@ model:
     feature_dim: 256  # choose same number of feature dimensions as used for the source model (default is 256)
     ckpt_dir: 'source_models/visda/source_model_OPDA/checkpoints/source_ckpt.pt'  # select pre-trained source model matching the desired source domain and category shift
 data:
-  class_path: datasets.VisDADataModule  # change to datasets.DomainNetDataModule for DomainNet dataset
+  class_path: datasets.VisDADataModule  # change to datasets.DomainNetDataModule for DomainNet dataset and to datasets.OfficeHomeDataModule for Office-Home dataset
   init_args:
     batch_size: 64
     category_shift: 'OPDA'  # select category shift scenario
