@@ -10,7 +10,7 @@ from augmentation import get_tta_transforms
 
 class GmmBaAdaptationModule(BaseModule):
     def __init__(self, datamodule, feature_dim=256, lr=1e-2, red_feature_dim=64, p_reject=0.5, N_init=30,
-                 augmentation=True, lam=1, temperature=0.1, ckpt_dir=''):
+                 augmentation=True, lam=1, temperature=0.1, alpha=0.999, ckpt_dir=''):
         super(GmmBaAdaptationModule, self).__init__(datamodule, feature_dim, lr, ckpt_dir)
 
         self.ckpt_dir = ckpt_dir
@@ -23,7 +23,7 @@ class GmmBaAdaptationModule(BaseModule):
         self.feature_reduction = nn.Sequential(nn.Linear(feature_dim, red_feature_dim)).to(self.device)
 
         # ---------- GMM ----------
-        self.gmm = GaussianMixtureModel(self.source_class_num)
+        self.gmm = GaussianMixtureModel(self.source_class_num, alpha)
 
         # ---------- Unknown mask ----------
         self.mask = mask(0.5 - p_reject / 2, 0.5 + p_reject / 2, N_init)

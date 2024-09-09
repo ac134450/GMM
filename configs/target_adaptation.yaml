@@ -28,6 +28,7 @@ model:
     augmentation: True
     lam: 1
     temperature: 0.1
+    alpha: 0.999
     ckpt_dir: 'source_models/visda/source_model_OPDA/checkpoints/source_ckpt.pt'  # select pre-trained source model matching the desired source domain and category shift
 data:
   class_path: datasets.VisDADataModule  # change to datasets.DomainNetDataModule for DomainNet dataset

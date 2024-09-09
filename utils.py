@@ -103,7 +103,8 @@ class CustomLRScheduler(torch.optim.lr_scheduler._LRScheduler):
 
 
 class GaussianMixtureModel():
-    def __init__(self, source_class_num):
+    def __init__(self, source_class_num, alpha):
+        self.alpha = alpha
         self.source_class_num = source_class_num
         self.batch_weight = torch.zeros(source_class_num, dtype=torch.float)
         self.mu = None
@@ -122,17 +123,15 @@ class GaussianMixtureModel():
         self.batch_weight = self.batch_weight.to(device=self.device, dtype=dtype)
 
         # ---------- Calculate mu ----------
-        # Calculate the sum of the posteriors
-        batch_weight_new = torch.zeros(posterior.shape[1], device=self.device, dtype=dtype)
-        batch_weight_new = batch_weight_new + torch.sum(posterior, dim=0)
-
-        batch_weight_new = batch_weight_new + self.batch_weight
+        # Calculate the sum of the posteriorsS
+        batch_weight_new = torch.sum(posterior, dim=0)
+        batch_weight_new = batch_weight_new + self.alpha * self.batch_weight
 
         # Calculate the sum of the weighted features
         weighted_sum = torch.matmul(posterior.T, feat)
 
         if self.mu != None:
-            weighted_sum = torch.multiply(self.batch_weight.unsqueeze(1), self.mu) + weighted_sum
+            weighted_sum = self.alpha * self.batch_weight.unsqueeze(1) * self.mu + weighted_sum
 
         # Calculate mu
         mu_new = weighted_sum / batch_weight_new[:, None]
@@ -151,7 +150,7 @@ class GaussianMixtureModel():
         weighted_sum = torch.sum(posterior_expanded * outer_prods, dim=0)
 
         if self.C != None:
-            weighted_sum = self.C * self.batch_weight.unsqueeze(1).unsqueeze(2) + weighted_sum
+            weighted_sum = self.C * self.alpha * self.batch_weight.unsqueeze(1).unsqueeze(2) + weighted_sum
 
         # Calculate C
         C_new = weighted_sum / batch_weight_new[:, None, None]
