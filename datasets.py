@@ -28,6 +28,28 @@ def test_transform(resize_size=256, crop_size=224):
     ])
 
 
+class DropLastConcatDataset(torch.utils.data.ConcatDataset):
+    def __init__(self, datasets, batch_size):
+        self.datasets = datasets
+        self.batch_size = batch_size
+        self.filtered_datasets = []
+        
+        for dataset in datasets:
+            # Calculate how many complete batches are in the dataset
+            num_batches = len(dataset) // batch_size
+            # Create a subset that only includes complete batches
+            self.filtered_datasets.append(torch.utils.data.Subset(dataset, range(num_batches * batch_size)))
+        
+        # Concatenate the filtered subsets
+        self.concatenated_dataset = torch.utils.data.ConcatDataset(self.filtered_datasets)
+    
+    def __len__(self):
+        return len(self.concatenated_dataset)
+    
+    def __getitem__(self, idx):
+        return self.concatenated_dataset[idx]
+
+
 class SFUniDADataModuleBase(L.LightningDataModule):
     def __init__(self, batch_size, data_dir, category_shift, train_domain, test_domain, shared_class_num,
                  source_private_class_num, target_private_class_num):
@@ -54,24 +76,40 @@ class SFUniDADataModuleBase(L.LightningDataModule):
         self.source_classes = self.shared_classes + self.source_private_classes
         self.target_classes = self.shared_classes + self.target_private_classes
 
-    def setup(self, stage):
-        self.train_set = torchvision.datasets.ImageFolder(root=self.data_dir+self.train_domain,
-                                                          transform=train_transform())
-        self.test_set = torchvision.datasets.ImageFolder(root=self.data_dir+self.test_domain,
+    def setup_single_test_domain(self, test_domain):
+        test_set = torchvision.datasets.ImageFolder(root=self.data_dir + test_domain,
                                                          transform=test_transform())
 
+        test_indices = [idx for idx, target in enumerate(test_set.targets) if target in self.target_classes]
+        return torch.utils.data.Subset(test_set, test_indices)
+
+    def setup(self, stage):
+        # setup train set
+        self.train_set = torchvision.datasets.ImageFolder(root=self.data_dir + self.train_domain,
+                                                          transform=train_transform())
         train_indices = [idx for idx, target in enumerate(self.train_set.targets) if target in self.source_classes]
         self.train_set = torch.utils.data.Subset(self.train_set, train_indices)
 
-        test_indices = [idx for idx, target in enumerate(self.test_set.targets) if target in self.target_classes]
-        self.test_set = torch.utils.data.Subset(self.test_set, test_indices)
+        # setup test domain(s)
+        if isinstance(self.test_domain, list):
+            individual_domains = []
+            for domain in self.test_domain:
+                # Load dataset
+                dataset = self.setup_single_test_domain(domain)
+                individual_domains.append(dataset)
+            self.test_set = DropLastConcatDataset(individual_domains, self.batch_size)
+        else:
+            self.test_set = self.setup_single_test_domain(self.test_domain)
 
     def train_dataloader(self):
         if isinstance(self.trainer.lightning_module, SourceModule):
-            return torch.utils.data.DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, drop_last=True,
-                                               num_workers=8)
+            return torch.utils.data.DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=8)
         else:
-            return torch.utils.data.DataLoader(self.test_set, batch_size=self.batch_size, shuffle=True, drop_last=True,
+            if isinstance(self.test_domain, list):
+                return torch.utils.data.DataLoader(self.test_set, batch_size=self.batch_size, shuffle=True, drop_last=False,
+                                               num_workers=8)
+            else:
+                return torch.utils.data.DataLoader(self.test_set, batch_size=self.batch_size, shuffle=True, drop_last=True,
                                                num_workers=8)
 
     def test_dataloader(self):
@@ -131,3 +169,29 @@ class VisDADataModule(SFUniDADataModuleBase):
         super(VisDADataModule, self).__init__(batch_size, data_dir, category_shift, train_domain,
                                               test_domain, self.shared_class_num, self.source_private_class_num,
                                               self.target_private_class_num)
+
+
+class OfficeHomeDataModule(SFUniDADataModuleBase):
+    def __init__(self, batch_size, category_shift='', train_domain='Art', test_domain='Clipart'):
+        data_dir = 'data/office-home/'
+
+        if category_shift == 'PDA':
+            self.shared_class_num = 25
+            self.source_private_class_num = 40
+            self.target_private_class_num = 0
+        elif category_shift == 'ODA':
+            self.shared_class_num = 25
+            self.source_private_class_num = 0
+            self.target_private_class_num = 40
+        elif category_shift == 'OPDA':
+            self.shared_class_num = 10
+            self.source_private_class_num = 5
+            self.target_private_class_num = 50
+        else:
+            self.shared_class_num = 65
+            self.source_private_class_num = 0
+            self.target_private_class_num = 0
+
+        super(OfficeHomeDataModule, self).__init__(batch_size, data_dir, category_shift, train_domain,
+                                                   test_domain, self.shared_class_num, self.source_private_class_num,
+                                                   self.target_private_class_num)
